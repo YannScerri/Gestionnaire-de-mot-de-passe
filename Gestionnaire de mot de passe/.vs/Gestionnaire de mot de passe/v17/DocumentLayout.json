@@ -1,0 +1,37 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\Trimestre 4\\Projet chiffrement de mot de passe\\Gestionnaire de mot de passe\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{CC3DC2BD-E10E-46E5-88B7-E3DD26F6F3AC}|Gestionnaire de mot de passe\\Gestionnaire de mot de passe.csproj|d:\\trimestre 4\\projet chiffrement de mot de passe\\gestionnaire de mot de passe\\gestionnaire de mot de passe\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CC3DC2BD-E10E-46E5-88B7-E3DD26F6F3AC}|Gestionnaire de mot de passe\\Gestionnaire de mot de passe.csproj|solutionrelative:gestionnaire de mot de passe\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Program.cs",
+              "DocumentMoniker": "D:\\Trimestre 4\\Projet chiffrement de mot de passe\\Gestionnaire de mot de passe\\Gestionnaire de mot de passe\\Program.cs",
+              "RelativeDocumentMoniker": "Gestionnaire de mot de passe\\Program.cs",
+              "ToolTip": "D:\\Trimestre 4\\Projet chiffrement de mot de passe\\Gestionnaire de mot de passe\\Gestionnaire de mot de passe\\Program.cs",
+              "RelativeToolTip": "Gestionnaire de mot de passe\\Program.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAIAAAATAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-04-16T11:11:46.513Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
