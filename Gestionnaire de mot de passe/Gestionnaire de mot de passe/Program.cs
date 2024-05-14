@@ -48,8 +48,9 @@ namespace Gestionnaire_de_mot_de_passe
                               "Sélectionnez une action via la touche correspondante\n" +
                               "[1] Consulter un mot de passe\n" +
                               "[2] Ajouter un mot de passe\n" +
-                              "[3] Supprimer un mot de passe \n" +
-                              "[4] Quitter le programme\n" +
+                              "[3] Modifier un mot de passe\n" +
+                              "[4] Supprimer un mot de passe \n" +
+                              "[5] Quitter le programme\n" +
                               "***********************************************\n\n" +
                               "Faites votre choix :");
 
@@ -64,9 +65,13 @@ namespace Gestionnaire_de_mot_de_passe
                     AddPassword(); //ajouter un nouveau mdp
                     break;
                 case '3':
+                    ModifyPassword();
+                    break;
+                        
+                case '4':
                     DeletePassword(); //supprimer un mdp
                     break;
-                case '4':
+                case '5':
                     Environment.Exit(0); //quitter l'application
                     break;
                 default:
@@ -228,6 +233,190 @@ namespace Gestionnaire_de_mot_de_passe
             } while (true);
 
         }
+
+        static void ModifyPassword()
+        {
+            Console.Clear();
+            Console.WriteLine("Veuillez choisir une option de modification :");
+            Console.WriteLine("[1] Modifier par nom de site");
+            Console.WriteLine("[2] Modifier par URL");
+            Console.WriteLine("[3] Modifier par identifiant");
+
+            ConsoleKeyInfo modifyOption = Console.ReadKey();
+
+            switch (modifyOption.KeyChar)
+            {
+                case '1':
+                    Console.Clear();
+                    Console.WriteLine("Veuillez entrer le nom du site dont vous souhaitez modifier le mot de passe :");
+                    string siteToModify = Console.ReadLine();
+                    ModifyPasswordBySite(siteToModify);
+                    break;
+                case '2':
+                    Console.Clear();
+                    Console.WriteLine("Veuillez entrer l'URL du site dont vous souhaitez modifier le mot de passe :");
+                    string urlToModify = Console.ReadLine();
+                    ModifyPasswordByUrl(urlToModify);
+                    break;
+                case '3':
+                    Console.Clear();
+                    Console.WriteLine("Veuillez entrer l'identifiant dont vous souhaitez modifier le mot de passe :");
+                    string usernameToModify = Console.ReadLine();
+                    ModifyPasswordByUsername(usernameToModify);
+                    break;
+                default:
+                    Console.WriteLine("Option invalide. Veuillez choisir une option valide.");
+                    break;
+            }
+        }
+
+        static void ModifyPasswordBySite(string siteName)
+        {
+            string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            string passwordFolderPath = Path.Combine(desktopPath, "Password");
+
+            try
+            {
+                if (Directory.Exists(passwordFolderPath))
+                {
+                    string[] files = Directory.GetFiles(passwordFolderPath);
+                    bool passwordModified = false;
+
+                    foreach (string file in files)
+                    {
+                        string fileContent = File.ReadAllText(file);
+                        if (fileContent.Contains($"Site: {siteName}"))
+                        {
+                            Console.WriteLine($"Ancien contenu du fichier '{Path.GetFileName(file)}':\n{fileContent}");
+
+                            Console.WriteLine("Veuillez entrer le nouveau mot de passe :");
+                            string newPassword = Console.ReadLine();
+
+                            string encryptedPassword = EncryptPassword(newPassword);
+
+                            fileContent = fileContent.Replace($"Mot de passe: {DecryptPassword(encryptedPassword)}", $"Mot de passe: {encryptedPassword}");
+
+                            File.WriteAllText(file, fileContent);
+                            Console.WriteLine($"Mot de passe modifié avec succès pour le site '{siteName}'");
+                            passwordModified = true;
+                            break;
+                        }
+                    }
+
+                    if (!passwordModified)
+                    {
+                        Console.WriteLine($"Aucun mot de passe trouvé pour le site '{siteName}'");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Le dossier ou le mot de passe n'existe pas");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erreur lors de la modification du mot de passe : {ex.Message}");
+            }
+        }
+
+        static void ModifyPasswordByUrl(string url)
+        {
+            string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            string passwordFolderPath = Path.Combine(desktopPath, "Password");
+
+            try
+            {
+                if (Directory.Exists(passwordFolderPath))
+                {
+                    string[] files = Directory.GetFiles(passwordFolderPath);
+                    bool passwordModified = false;
+
+                    foreach (string file in files)
+                    {
+                        string fileContent = File.ReadAllText(file);
+                        if (fileContent.Contains($"URL: {url}"))
+                        {
+                            Console.WriteLine($"Ancien contenu du fichier '{Path.GetFileName(file)}':\n{fileContent}");
+
+                            Console.WriteLine("Veuillez entrer le nouveau mot de passe :");
+                            string newPassword = Console.ReadLine();
+
+                            string encryptedPassword = EncryptPassword(newPassword);
+
+                            fileContent = fileContent.Replace($"Mot de passe: {DecryptPassword(encryptedPassword)}", $"Mot de passe: {encryptedPassword}");
+
+                            File.WriteAllText(file, fileContent);
+                            Console.WriteLine($"Mot de passe modifié avec succès pour l'URL '{url}'");
+                            passwordModified = true;
+                            break;
+                        }
+                    }
+
+                    if (!passwordModified)
+                    {
+                        Console.WriteLine($"Aucun mot de passe trouvé pour l'URL '{url}'");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Le dossier ou le mot de passe n'existe pas");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erreur lors de la modification du mot de passe : {ex.Message}");
+            }
+        }
+
+        static void ModifyPasswordByUsername(string username)
+        {
+            string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            string passwordFolderPath = Path.Combine(desktopPath, "Password");
+
+            try
+            {
+                if (Directory.Exists(passwordFolderPath))
+                {
+                    string[] files = Directory.GetFiles(passwordFolderPath);
+                    bool passwordModified = false;
+
+                    foreach (string file in files)
+                    {
+                        string fileContent = File.ReadAllText(file);
+                        if (fileContent.Contains($"Identifiant : {username}"))
+                        {
+                            Console.WriteLine($"Ancien contenu du fichier '{Path.GetFileName(file)}':\n{fileContent}");
+
+                            Console.WriteLine("Veuillez entrer le nouveau mot de passe :");
+                            string newPassword = Console.ReadLine();
+
+                            string encryptedPassword = EncryptPassword(newPassword);
+
+                            fileContent = fileContent.Replace($"Mot de passe: {DecryptPassword(encryptedPassword)}", $"Mot de passe: {encryptedPassword}");
+
+                            File.WriteAllText(file, fileContent);
+                            Console.WriteLine($"Mot de passe modifié avec succès pour l'identifiant '{username}'");
+                            passwordModified = true;
+                            break;
+                        }
+                    }
+
+                    if (!passwordModified)
+                    {
+                        Console.WriteLine($"Aucun mot de passe trouvé pour l'identifiant '{username}'");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Le dossier ou le mot de passe n'existe pas");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erreur lors de la modification du mot de passe : {ex.Message}");
+            }
+        }
+
 
         /// <summary>
         /// méthode permettant de créer des fichiers sur le bureau
