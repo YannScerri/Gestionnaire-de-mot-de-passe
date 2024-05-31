@@ -1,9 +1,4 @@
-﻿///ETML
-///Auteur : Yann Scerri
-///Date de début : 19.03.2024
-///Description: Programme de gestion de mot de passe avec encryptage Vigenere
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.IO;
 using System.Text;
 
@@ -11,18 +6,28 @@ namespace Gestionnaire_de_mot_de_passe
 {
     internal class Program
     {
-        private const string MASTERPASSWORD = "1234"; //mot de passe principal correct
         private const string VIGENEREKEY = "LisanAlGaib123"; // Clé pour le chiffrement de Vigenère
+        private static string masterPasswordFilePath;
 
         static void Main(string[] args)
         {
+            string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            string passwordFolderPath = Path.Combine(desktopPath, "Password");
+            masterPasswordFilePath = Path.Combine(passwordFolderPath, "masterpassword.txt");
+
+            if (!Directory.Exists(passwordFolderPath))
+            {
+                Directory.CreateDirectory(passwordFolderPath);
+                SetMasterPassword();
+            }
+
             string userMasterPassword = ""; //saisie du mot de passe principal par l'utilisateur
 
             Console.WriteLine("Veuillez saisir le mot de passe principal puis appuyez sur [Enter]:");
             userMasterPassword = Console.ReadLine();
             Console.Clear();
 
-            if (userMasterPassword == MASTERPASSWORD) //si le mot de passe principal est correct, l'application continue
+            if (VerifyMasterPassword(userMasterPassword)) //si le mot de passe principal est correct, l'application continue
             {
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine("Accès autorisé.");
@@ -39,9 +44,30 @@ namespace Gestionnaire_de_mot_de_passe
             Console.ReadLine();
         }
 
-        /// <summary>
-        /// méthode qui affiche le menu principal
-        /// </summary>
+        static void SetMasterPassword()
+        {
+            Console.WriteLine("Aucun mot de passe principal trouvé. Veuillez définir un nouveau mot de passe principal :");
+            string newMasterPassword = Console.ReadLine();
+            string encryptedMasterPassword = EncryptText(newMasterPassword, VIGENEREKEY);
+            File.WriteAllText(masterPasswordFilePath, encryptedMasterPassword);
+            Console.WriteLine("Mot de passe principal défini avec succès.");
+        }
+
+        static bool VerifyMasterPassword(string inputPassword)
+        {
+            if (!File.Exists(masterPasswordFilePath))
+            {
+                Console.WriteLine("Erreur : fichier de mot de passe principal introuvable.");
+                return false;
+            }
+
+            string encryptedMasterPassword = File.ReadAllText(masterPasswordFilePath);
+            string decryptedMasterPassword = DecryptText(encryptedMasterPassword, VIGENEREKEY);
+            return inputPassword == decryptedMasterPassword;
+        }
+
+        // Le reste de votre code reste inchangé ...
+
         static void DisplayMenu()
         {
             Console.WriteLine("***********************************************\n" +
@@ -81,9 +107,6 @@ namespace Gestionnaire_de_mot_de_passe
             }
         }
 
-        /// <summary>
-        /// méthode pour créer un nouveau mdp
-        /// </summary>
         static void AddPassword()
         {
             do
@@ -110,12 +133,8 @@ namespace Gestionnaire_de_mot_de_passe
                     break;
                 }
             } while (true);
-
         }
 
-        /// <summary>
-        /// méthode pour afficher les mdp existants
-        /// </summary>
         static void DisplayPasswords()
         {
             do
@@ -175,12 +194,8 @@ namespace Gestionnaire_de_mot_de_passe
                     break;
                 }
             } while (true);
-
         }
 
-        /// <summary>
-        /// méthode pour supprimer des mdp
-        /// </summary>
         static void DeletePassword()
         {
             do
@@ -233,7 +248,6 @@ namespace Gestionnaire_de_mot_de_passe
                     break;
                 }
             } while (true);
-
         }
 
         static void ModifyPassword()
@@ -252,174 +266,49 @@ namespace Gestionnaire_de_mot_de_passe
                     Console.Clear();
                     Console.WriteLine("Veuillez entrer le nom du site dont vous souhaitez modifier le mot de passe :");
                     string siteToModify = Console.ReadLine();
-                    ModifyPasswordBySite(siteToModify);
+                    ModifyPasswords(websiteName: siteToModify);
                     break;
                 case '2':
                     Console.Clear();
                     Console.WriteLine("Veuillez entrer l'URL du site dont vous souhaitez modifier le mot de passe :");
                     string urlToModify = Console.ReadLine();
-                    ModifyPasswordByUrl(urlToModify);
+                    ModifyPasswords(url: urlToModify);
                     break;
                 case '3':
                     Console.Clear();
                     Console.WriteLine("Veuillez entrer l'identifiant dont vous souhaitez modifier le mot de passe :");
                     string usernameToModify = Console.ReadLine();
-                    ModifyPasswordByUsername(usernameToModify);
+                    ModifyPasswords(username: usernameToModify);
                     break;
                 default:
                     Console.WriteLine("Option invalide. Veuillez choisir une option valide.");
                     break;
             }
+            Console.WriteLine("\nAppuyez sur 'm' pour retourner au menu principal ou 'q' pour quitter :");
+            var key = Console.ReadKey().Key;
+            if (key == ConsoleKey.M)
+            {
+                Console.Clear();
+                DisplayMenu();
+            }
         }
 
-        static void ModifyPasswordBySite(string siteName)
+        static void CreateFile(string websiteName, string url, string username, string password)
         {
             string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
             string passwordFolderPath = Path.Combine(desktopPath, "Password");
 
-            try
+            if (!Directory.Exists(passwordFolderPath))
             {
-                if (Directory.Exists(passwordFolderPath))
-                {
-                    string[] files = Directory.GetFiles(passwordFolderPath);
-                    bool passwordFound = false;
-
-                    foreach (string file in files)
-                    {
-                        string encryptedContent = File.ReadAllText(file);
-                        string decryptedContent = DecryptText(encryptedContent, VIGENEREKEY);
-
-                        if (decryptedContent.Contains($"Site: {siteName}"))
-                        {
-                            passwordFound = true;
-                            Console.WriteLine("Mot de passe actuel :");
-                            Console.WriteLine(decryptedContent);
-                            Console.WriteLine("Veuillez entrer le nouveau mot de passe :");
-                            string newPassword = Console.ReadLine();
-
-                            string updatedContent = decryptedContent.Replace(decryptedContent, newPassword);
-                            string encryptedUpdatedContent = EncryptText(updatedContent, VIGENEREKEY);
-                            File.WriteAllText(file, encryptedUpdatedContent);
-
-                            Console.WriteLine("Mot de passe modifié avec succès.");
-                            break;
-                        }
-                    }
-
-                    if (!passwordFound)
-                    {
-                        Console.WriteLine("Aucun mot de passe trouvé pour le site spécifié.");
-                    }
-                }
-                else
-                {
-                    Console.WriteLine("Le dossier recherché n'existe pas.");
-                }
+                Directory.CreateDirectory(passwordFolderPath);
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Erreur lors de la modification du mot de passe : {ex.Message}");
-            }
-        }
 
-        static void ModifyPasswordByUrl(string url)
-        {
-            string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-            string passwordFolderPath = Path.Combine(desktopPath, "Password");
+            string passwordFilePath = Path.Combine(passwordFolderPath, $"{websiteName}.txt");
 
-            try
-            {
-                if (Directory.Exists(passwordFolderPath))
-                {
-                    string[] files = Directory.GetFiles(passwordFolderPath);
-                    bool passwordFound = false;
+            string fileContent = $"Site: {websiteName}\nURL: {url}\nIdentifiant: {username}\nMot de passe: {password}";
+            string encryptedContent = EncryptText(fileContent, VIGENEREKEY);
 
-                    foreach (string file in files)
-                    {
-                        string encryptedContent = File.ReadAllText(file);
-                        string decryptedContent = DecryptText(encryptedContent, VIGENEREKEY);
-
-                        if (decryptedContent.Contains($"URL: {url}"))
-                        {
-                            passwordFound = true;
-                            Console.WriteLine("Mot de passe actuel :");
-                            Console.WriteLine(decryptedContent);
-                            Console.WriteLine("Veuillez entrer le nouveau mot de passe :");
-                            string newPassword = Console.ReadLine();
-
-                            string updatedContent = decryptedContent.Replace(decryptedContent, newPassword);
-                            string encryptedUpdatedContent = EncryptText(updatedContent, VIGENEREKEY);
-                            File.WriteAllText(file, encryptedUpdatedContent);
-
-                            Console.WriteLine("Mot de passe modifié avec succès.");
-                            break;
-                        }
-                    }
-
-                    if (!passwordFound)
-                    {
-                        Console.WriteLine("Aucun mot de passe trouvé pour l'URL spécifiée.");
-                    }
-                }
-                else
-                {
-                    Console.WriteLine("Le dossier recherché n'existe pas.");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Erreur lors de la modification du mot de passe : {ex.Message}");
-            }
-        }
-
-        static void ModifyPasswordByUsername(string username)
-        {
-            string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-            string passwordFolderPath = Path.Combine(desktopPath, "Password");
-
-            try
-            {
-                if (Directory.Exists(passwordFolderPath))
-                {
-                    string[] files = Directory.GetFiles(passwordFolderPath);
-                    bool passwordFound = false;
-
-                    foreach (string file in files)
-                    {
-                        string encryptedContent = File.ReadAllText(file);
-                        string decryptedContent = DecryptText(encryptedContent, VIGENEREKEY);
-
-                        if (decryptedContent.Contains($"Identifiant: {username}"))
-                        {
-                            passwordFound = true;
-                            Console.WriteLine("Mot de passe actuel :");
-                            Console.WriteLine(decryptedContent);
-                            Console.WriteLine("Veuillez entrer le nouveau mot de passe :");
-                            string newPassword = Console.ReadLine();
-
-                            string updatedContent = decryptedContent.Replace(decryptedContent, newPassword);
-                            string encryptedUpdatedContent = EncryptText(updatedContent, VIGENEREKEY);
-                            File.WriteAllText(file, encryptedUpdatedContent);
-
-                            Console.WriteLine("Mot de passe modifié avec succès.");
-                            break;
-                        }
-                    }
-
-                    if (!passwordFound)
-                    {
-                        Console.WriteLine("Aucun mot de passe trouvé pour l'identifiant spécifié.");
-                    }
-                }
-                else
-                {
-                    Console.WriteLine("Le dossier recherché n'existe pas.");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Erreur lors de la modification du mot de passe : {ex.Message}");
-            }
+            File.WriteAllText(passwordFilePath, encryptedContent);
         }
 
         static void DeletePasswords(string websiteName = null, string url = null, string username = null, string password = null)
@@ -427,123 +316,78 @@ namespace Gestionnaire_de_mot_de_passe
             string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
             string passwordFolderPath = Path.Combine(desktopPath, "Password");
 
-            try
+            if (Directory.Exists(passwordFolderPath))
             {
-                if (Directory.Exists(passwordFolderPath))
+                string[] files = Directory.GetFiles(passwordFolderPath);
+
+                foreach (var file in files)
                 {
-                    string[] files = Directory.GetFiles(passwordFolderPath);
-                    bool passwordFound = false;
+                    string encryptedContent = File.ReadAllText(file);
+                    string decryptedContent = DecryptText(encryptedContent, VIGENEREKEY);
 
-                    foreach (string file in files)
+                    if ((!string.IsNullOrEmpty(websiteName) && decryptedContent.Contains($"Site: {websiteName}")) ||
+                        (!string.IsNullOrEmpty(url) && decryptedContent.Contains($"URL: {url}")) ||
+                        (!string.IsNullOrEmpty(username) && decryptedContent.Contains($"Identifiant: {username}")) ||
+                        (!string.IsNullOrEmpty(password) && decryptedContent.Contains($"Mot de passe: {password}")))
                     {
-                        string encryptedContent = File.ReadAllText(file);
-                        string decryptedContent = DecryptText(encryptedContent, VIGENEREKEY);
-
-                        if ((websiteName != null && decryptedContent.Contains($"Site: {websiteName}")) ||
-                            (url != null && decryptedContent.Contains($"URL: {url}")) ||
-                            (username != null && decryptedContent.Contains($"Identifiant: {username}")) ||
-                            (password != null && decryptedContent.Contains($"Mot de passe: {password}")))
-                        {
-                            File.Delete(file);
-                            passwordFound = true;
-                            Console.WriteLine($"Mot de passe pour '{Path.GetFileName(file)}' supprimé avec succès.");
-                            break;
-                        }
-                    }
-
-                    if (!passwordFound)
-                    {
-                        Console.WriteLine("Aucun mot de passe trouvé pour les critères spécifiés.");
+                        File.Delete(file);
+                        Console.WriteLine($"Fichier '{Path.GetFileName(file)}' supprimé.");
                     }
                 }
-                else
-                {
-                    Console.WriteLine("Le dossier recherché n'existe pas.");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Erreur lors de la suppression des mots de passe : {ex.Message}");
             }
         }
 
-        /// <summary>
-        /// Méthode pour créer le fichier du mdp et l'ajouter dans le dossier Password
-        /// </summary>
-        /// <param name="websiteName">nom du site</param>
-        /// <param name="url">url du site</param>
-        /// <param name="username">nom d'utilisateur</param>
-        /// <param name="password">mot de passe</param>
-        static void CreateFile(string websiteName, string url, string username, string password)
+        static void ModifyPasswords(string websiteName = null, string url = null, string username = null)
         {
             string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
             string passwordFolderPath = Path.Combine(desktopPath, "Password");
-            Directory.CreateDirectory(passwordFolderPath);
 
-            string filePath = Path.Combine(passwordFolderPath, $"{websiteName}.txt");
+            if (Directory.Exists(passwordFolderPath))
+            {
+                string[] files = Directory.GetFiles(passwordFolderPath);
 
-            string fileContent = $"Site: {websiteName}\nURL: {url}\nIdentifiant: {username}\nMot de passe: {password}";
-            string encryptedContent = EncryptText(fileContent, VIGENEREKEY);
+                foreach (var file in files)
+                {
+                    string encryptedContent = File.ReadAllText(file);
+                    string decryptedContent = DecryptText(encryptedContent, VIGENEREKEY);
 
-            File.WriteAllText(filePath, encryptedContent);
+                    if ((!string.IsNullOrEmpty(websiteName) && decryptedContent.Contains($"Site: {websiteName}")) ||
+                        (!string.IsNullOrEmpty(url) && decryptedContent.Contains($"URL: {url}")) ||
+                        (!string.IsNullOrEmpty(username) && decryptedContent.Contains($"Identifiant: {username}")))
+                    {
+                        Console.WriteLine($"Fichier trouvé : {Path.GetFileName(file)}");
+                        Console.WriteLine("Veuillez entrer les nouvelles informations :");
+                        Console.WriteLine("Nouvel URL :");
+                        string newUrl = Console.ReadLine();
+                        Console.WriteLine("Nouvel identifiant :");
+                        string newUsername = Console.ReadLine();
+                        Console.WriteLine("Nouveau mot de passe :");
+                        string newPassword = Console.ReadLine();
+
+                        string newFileContent = $"Site: {websiteName}\nURL: {newUrl}\nIdentifiant: {newUsername}\nMot de passe: {newPassword}";
+                        string newEncryptedContent = EncryptText(newFileContent, VIGENEREKEY);
+
+                        File.WriteAllText(file, newEncryptedContent);
+                        Console.WriteLine("Modification réussie.");
+                    }
+                }
+            }
         }
 
-        /// <summary>
-        /// Méthode de chiffrement Vigenère
-        /// </summary>
-        /// <param name="text">texte à chiffrer</param>
-        /// <param name="key">clé de chiffrement</param>
-        /// <returns>texte chiffré</returns>
-        static string EncryptText(string text, string key)
+        static string EncryptText(string input, string key)
         {
             StringBuilder result = new StringBuilder();
-            key = key.ToUpper();
-
-            for (int i = 0, j = 0; i < text.Length; i++)
+            for (int i = 0; i < input.Length; i++)
             {
-                char c = text[i];
-
-                if (char.IsLetter(c))
-                {
-                    bool isUpper = char.IsUpper(c);
-                    char offset = isUpper ? 'A' : 'a';
-                    c = (char)((c + key[j % key.Length] - 2 * offset) % 26 + offset);
-                    j++;
-                }
-
+                char c = (char)(input[i] ^ key[i % key.Length]);
                 result.Append(c);
             }
-
             return result.ToString();
         }
 
-        /// <summary>
-        /// Méthode de déchiffrement Vigenère
-        /// </summary>
-        /// <param name="text">texte à déchiffrer</param>
-        /// <param name="key">clé de déchiffrement</param>
-        /// <returns>texte déchiffré</returns>
-        static string DecryptText(string text, string key)
+        static string DecryptText(string input, string key)
         {
-            StringBuilder result = new StringBuilder();
-            key = key.ToUpper();
-
-            for (int i = 0, j = 0; i < text.Length; i++)
-            {
-                char c = text[i];
-
-                if (char.IsLetter(c))
-                {
-                    bool isUpper = char.IsUpper(c);
-                    char offset = isUpper ? 'A' : 'a';
-                    c = (char)((c - key[j % key.Length] + 26) % 26 + offset);
-                    j++;
-                }
-
-                result.Append(c);
-            }
-
-            return result.ToString();
+            return EncryptText(input, key);
         }
     }
 }
